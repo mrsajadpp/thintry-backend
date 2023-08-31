@@ -5,6 +5,7 @@ var cookieSession = require('cookie-session');
 let bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
 const compression = require('compression');
+const sanitizeHtml = require('sanitize-html');
 const cors = require('cors');
 const axios = require('axios');
 const userData = require('./database/user')
@@ -72,14 +73,12 @@ app.get('/api/auth/login', async (req, res, next) => {
             res.json({ status: false });
         }
     } catch (error) {
-        console.log(error)
         res.status(500).json({ status: false, message: 'An error occurred while signing up' });
     }
 });
 
 app.get('/api/auth/verify/check', async (req, res, next) => {
     try {
-        console.log(req.query)
         let response = await userData.verifyUser(req.query);
 
         if (response.status) {
@@ -112,7 +111,6 @@ app.get('/api/fetch/user', async (req, res, next) => {
 
 app.get('/api/fetch/user/posts', async (req, res, next) => {
     try {
-        console.log(req.query)
         let response = await userData.fetchPosts(req.query);
 
         if (response.status) {
@@ -123,6 +121,53 @@ app.get('/api/fetch/user/posts', async (req, res, next) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while fetching the user' });
+    }
+});
+
+app.get('/api/user/update', async (req, res, next) => {
+    try {
+        let updatedUser = await userData.updateUser(req.query);
+        if (updatedUser.status) {
+            res.json({ status: true, user: updatedUser.user });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while updating the user' });
+    }
+});
+
+app.get('/api/fetch/user/tags', async (req, res, next) => {
+    try {
+        let tags = await userData.fetchTags(req.query);
+        if (tags.status) {
+            res.json({ status: true, tags: tags.tag });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while fetching the user tags' });
+    }
+});
+
+app.get('/api/tag/new', async (req, res, next) => {
+    try {
+        const sanitizedContent = await sanitizeHtml(req.query.content, {
+            allowedTags: [], // Remove all HTML tags
+            allowedAttributes: {} // No attributes allowed
+        });
+        req.query.content = await sanitizedContent;
+        let tags = await userData.newTag(req.query);
+        if (tags.status) {
+            res.json({ status: true, tag: tags.tag });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while new tag' });
     }
 })
 

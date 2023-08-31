@@ -2,6 +2,9 @@ let db = require('./config.js')
 const ObjectId = require('mongodb').ObjectID;
 var bcrypt = require('bcrypt');
 const schedule = require('node-schedule');
+var Filter = require('bad-words');
+var badFilter = new Filter({ placeHolder: '*', replaceRegex: /[A-Za-z0-9가-힣_]/g, regex: /\*|\.|$/gi });
+var profanity = require("profanity-hindi");
 const saltRounds = 10;
 var nodemailer = require('nodemailer');
 
@@ -88,8 +91,7 @@ module.exports = {
             if (!user) {
                 let verification_code = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
                 let encrypted_verification_code = await bcrypt.hash(verification_code, saltRounds);
-
-                console.log(encrypted_verification_code)
+                let hash_pass = await bcrypt.hash(userData.password, saltRounds);
 
                 let newUserData = await {
                     username: userData.username.toLowerCase(),
@@ -97,7 +99,7 @@ module.exports = {
                     lastname: userData.lastname,
                     email: userData.email,
                     about: 'I am a Thintry user!',
-                    password: await bcrypt.hash(userData.password, saltRounds),
+                    password: hash_pass,
                     verified: false,
                     official: false,
                     status: false,
@@ -311,14 +313,114 @@ module.exports = {
                     }
                 }
             ]).toArray();
-            
+
             if (posts) {
                 return { status: true, posts }
             } else {
                 return { status: false }
             }
-        } catch (error) { 
+        } catch (error) {
             throw { status: false, message: 'An error occurred while fetching posts' };
+        }
+    },
+    updateUser: async (userData) => {
+        try {
+            let upUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate({ _id: ObjectId(userData._id) }, { $set: { username: userData.username.toLowerCase, firstname: userData.firstname, lastname: userData.lastname || '', about: userData.about } }).catch(error => console.log(error));
+            let newData = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: upUser.value._id });
+            if (newData) {
+                return { status: true, user: newData };
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            throw { status: false, message: 'An error occurred while updating user' };
+        }
+    },
+    fetchTags: async (data) => {
+        try {
+            if (data.uid) {
+                let tags = await db.get().collection(COLLECTIONS.POSTS).find({ user: ObjectId(data.uid) }).toArray();
+
+                if (tags) {
+                    // Sort tags based on timestamp in descending order
+                    tags.sort((a, b) => b.timestamp - a.timestamp);
+
+                    return { status: true, tag: tags };
+                } else {
+                    return { status: false };
+                }
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            throw { status: false, message: 'An error occurred while finding tags' };
+        }
+    },
+    newTag: async (data) => {
+        try {
+            const timestamp = new Date(); // Get the current timestamp
+            const postData = {
+                user: ObjectId(data._id), // Assuming userId is the ID of the user creating the post
+                content: profanity.maskBadWords(badFilter.clean(data.content)),
+                timestamp: timestamp,
+                upvote: [],
+                downvote: []
+            };
+            let tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
+            const regex = /@([a-zA-Z0-9_]+)/g;
+            const usernames = data.content.match(regex);
+            setTimeout(() => {
+                if (data.content.match(regex)) {
+                    db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
+                        usernames.forEach(username => {
+                            db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@/g, '') }).then((user) => {
+                                if (user) {
+                                    sendMail({
+                                        email: user.email,
+                                        subject: `${client.firstname} ${client.lastname} mentioned you!`,
+                                        text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
+                                        content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="https://thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    });
+                                }
+                            }).catch((error) => {
+                                reject(error);
+                            });
+                        });
+                    }).catch((error) => {
+                        reject(error);
+                    });
+                }
+            }, 100);
+
+            setTimeout(() => {
+                db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
+                    if (data.content.toLowerCase().includes("@everyone") && client.official) {
+                        setTimeout(async () => {
+                            let users = await db.get().collection(COLLECTIONS.USERS).find().toArray();
+                            users.forEach(user => {
+                                sendMail({
+                                    email: user.email,
+                                    subject: "Something important!",
+                                    text: `Hello ${user.firstname}, important post by `,
+                                    content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="https://thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                });
+                            });
+                        }, 1000);
+                    }
+                }).catch((error) => {
+                    reject(error);
+                });
+            }, 100);
+
+            let newTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: tag.insertedId });
+            if (newTag) {
+                return { status: true, tag: newTag };
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            console.log(error)
+            throw { status: false, message: 'An error occurred while uploading tag' };
         }
     }
 };
