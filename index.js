@@ -27,27 +27,27 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/api/auth/check', (req, res, next) => {
+app.get('/auth/check', (req, res, next) => {
     try {
         const isLogged = req.session.logged ? true : false;
         res.json({ isLogged });
     } catch (error) {
-        console.error('Error in /api/auth/check:', error);
+        console.error('Error in /auth/check:', error);
         res.status(500).json({ status: false, message: 'An error occurred while checking authentication status' });
     }
 });
 
-app.get('/api/username/check', async (req, res, next) => {
+app.get('/username/check', async (req, res, next) => {
     try {
         const usernameExist = await userData.checkUsername(req.query.username);
         res.json({ usernameExist });
     } catch (error) {
-        console.error('Error in /api/username/check:', error);
+        console.error('Error in /username/check:', error);
         res.status(500).json({ status: false, message: 'An error occurred while checking username availability' });
     }
 });
 
-app.get('/api/auth/signup', async (req, res, next) => {
+app.get('/auth/signup', async (req, res, next) => {
     try {
         const ipAddress = req.header('x-forwarded-for') || req.headers['x-real-ip'] || req.headers['cf-connecting-ip'] || req.connection.remoteAddress || requestIP.getClientIp(req);
 
@@ -58,12 +58,12 @@ app.get('/api/auth/signup', async (req, res, next) => {
 
         res.json({ status: true, user });
     } catch (error) {
-        console.error('Error in /api/auth/signup:', error);
+        console.error('Error in /auth/signup:', error);
         res.status(500).json({ status: false, message: 'An error occurred while signing up' });
     }
 });
 
-app.get('/api/auth/login', async (req, res, next) => {
+app.get('/auth/login', async (req, res, next) => {
     try {
         let response = await userData.login(req.query);
         if (response.status) {
@@ -77,7 +77,7 @@ app.get('/api/auth/login', async (req, res, next) => {
     }
 });
 
-app.get('/api/auth/verify/check', async (req, res, next) => {
+app.get('/auth/verify/check', async (req, res, next) => {
     try {
         let response = await userData.verifyUser(req.query);
 
@@ -88,12 +88,12 @@ app.get('/api/auth/verify/check', async (req, res, next) => {
             res.json({ status: false });
         }
     } catch (error) {
-        console.error('Error in /api/auth/verify/check:', error);
+        console.error('Error in /auth/verify/check:', error);
         res.status(500).json({ status: false, message: 'An error occurred while verifying the user' });
     }
 });
 
-app.get('/api/fetch/user', async (req, res, next) => {
+app.get('/fetch/user', async (req, res, next) => {
     try {
         let response = await userData.fetchUser(req.query);
 
@@ -109,7 +109,7 @@ app.get('/api/fetch/user', async (req, res, next) => {
     }
 });
 
-app.get('/api/fetch/user/posts', async (req, res, next) => {
+app.get('/fetch/user/posts', async (req, res, next) => {
     try {
         let response = await userData.fetchPosts(req.query);
 
@@ -124,7 +124,7 @@ app.get('/api/fetch/user/posts', async (req, res, next) => {
     }
 });
 
-app.get('/api/user/update', async (req, res, next) => {
+app.get('/user/update', async (req, res, next) => {
     try {
         let updatedUser = await userData.updateUser(req.query);
         if (updatedUser.status) {
@@ -138,7 +138,7 @@ app.get('/api/user/update', async (req, res, next) => {
     }
 });
 
-app.get('/api/fetch/user/tags', async (req, res, next) => {
+app.get('/fetch/user/tags', async (req, res, next) => {
     try {
         let tags = await userData.fetchTags(req.query);
         if (tags.status) {
@@ -152,7 +152,7 @@ app.get('/api/fetch/user/tags', async (req, res, next) => {
     }
 });
 
-app.get('/api/tag/new', async (req, res, next) => {
+app.get('/tag/new', async (req, res, next) => {
     try {
         const sanitizedContent = await sanitizeHtml(req.query.content, {
             allowedTags: [], // Remove all HTML tags
@@ -169,7 +169,83 @@ app.get('/api/tag/new', async (req, res, next) => {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while new tag' });
     }
+});
+
+app.get('/fetch/user/tags/all', async (req, res, next) => {
+    try {
+        let response = await userData.findAllTags();
+        if (response.status) {
+            res.json({ status: true, tags: response.tags });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while new tag' });
+    }
+});
+
+app.get('/tag/delete', async (req, res, next) => {
+    try {
+        console.log(req.query)
+        let response = await userData.delTag(req.query);
+        if (response.status) {
+            res.json({ status: true });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+});
+
+app.post('/tag/upvote', async (req, res, next) => {
+    try {
+        console.log(req.body);
+        let response = await userData.upVote(req.body);
+        if (response.status) {
+            res.json({ status: true, tags: response.tags });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+});
+
+app.post('/tag/downvote', async (req, res, next) => {
+    try {
+        console.log(req.body);
+        let response = await userData.downVote(req.body);
+        if (response.status) {
+            res.json({ status: true, tags: response.tags });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+});
+
+app.get('/fetch/tag', async (req, res, next) => {
+    try {
+        console.log(req.query);
+        let response = await userData.findTag(req.query);
+        if (response.status) {
+            res.json({ status: true, tag: response.tag });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
 })
+
+app.get('/fetch/tag/replies', async (req, res, next) => {})
 
 app.listen(port, () => {
     console.log("Server started : " + port)

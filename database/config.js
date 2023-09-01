@@ -15,7 +15,7 @@ function connect(done) {
         console.error(err)
     }
 }
-function get() {
+function get() { 
     return state.db;
 }
 connect((err) => {

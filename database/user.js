@@ -38,37 +38,98 @@ let sendMail = (data) => {
 
 const delUn = () => {
     setTimeout(async () => {
-        let users = await db.get().collection(COLLECTIONS.USERS).find({ status: false }).toArray().catch(error => console.log(error));
-        users.map(user => {
-            db.get().collection(COLLECTIONS.USERS).deleteOne({ _id: user._id }).catch(error => console.log(error));;
-        });
+        try {
+            let users = await db.get().collection(COLLECTIONS.USERS).find({ status: false }).toArray();
+            for (const user of users) {
+                await db.get().collection(COLLECTIONS.USERS).deleteOne({ _id: user._id });
+            }
+        } catch (error) {
+            console.error("Error in delUn:", error);
+        }
+    }, 1000);
+}
+
+const delPostNoUser = () => {
+    setTimeout(async () => {
+        try {
+            let posts = await db.get().collection(COLLECTIONS.POSTS).find().toArray();
+            for (const post of posts) {
+                let user = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(post.user) });
+                if (!user) {
+                    await db.get().collection(COLLECTIONS.POSTS).deleteMany({ _id: post._id });
+                }
+            }
+        } catch (error) {
+            console.error("Error in delUn:", error);
+        }
     }, 1000);
 }
 
 const updateOtp = () => {
     setTimeout(async () => {
-        let users = await db.get().collection(COLLECTIONS.USERS).find({ status: false }).toArray().catch(error => console.log(error));;
-        users.map(async user => {
-            let verification_code = await Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-            db.get().collection(COLLECTIONS.USERS).findOneAndUpdate({ _id: user._id }, { $set: { verification_code: verification_code, encrypted_verification_code: bcrypt.hash(verification_code, saltRounds) } }).catch(error => console.log(error));
-        });
+        try {
+            let users = await db.get().collection(COLLECTIONS.USERS).find({ status: false }).toArray();
+            for (const user of users) {
+                let verification_code = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
+                    { _id: user._id },
+                    { $set: { verification_code: verification_code, encrypted_verification_code: await bcrypt.hash(verification_code, saltRounds) } }
+                );
+            }
+        } catch (error) {
+            console.error("Error in updateOtp:", error);
+        }
     }, 1000);
 }
 
 schedule.scheduleJob('*/7 * * * *', () => {
-    try {
-        delUn();
-    } catch (error) {
-        console.log(error)
-    }
+    delUn();
 });
 
-schedule.scheduleJob('*/7 * * * *', function () {
-    try {
-        updateOtp();
-    } catch (error) {
-        console.log(error)
+schedule.scheduleJob('*/7 * * * *', () => {
+    updateOtp();
+});
+
+function findUniqueValues(arr) {
+    const uniqueValues = [];
+    const seenValues = {};
+
+    for (const value of arr) {
+        if (!seenValues[value]) {
+            uniqueValues.push(value);
+            seenValues[value] = true;
+        }
     }
+
+    return uniqueValues;
+}
+
+const removeDuplicateFollowersAndFollowings = async () => {
+    try {
+        const users = await db.get().collection(COLLECTIONS.USERS).find({}).toArray();
+
+        for (const user of users) {
+            const uniqueFollowers = await findUniqueValues(user.followers);
+            const uniqueFollowings = await findUniqueValues(user.followings);
+
+            await db.get().collection(COLLECTIONS.USERS).updateOne(
+                { _id: user._id },
+                { $set: { followers: uniqueFollowers, followings: uniqueFollowings } }
+            );
+        }
+
+        console.log("Duplicate followers and followings removed successfully.");
+    } catch (error) {
+        console.error("Error removing duplicate followers and followings:", error);
+    }
+};
+
+schedule.scheduleJob('*/7 * * * *', () => {
+    removeDuplicateFollowersAndFollowings();
+});
+
+schedule.scheduleJob('*/7 * * * *', () => {
+    delPostNoUser();
 });
 
 module.exports = {
@@ -339,18 +400,65 @@ module.exports = {
     fetchTags: async (data) => {
         try {
             if (data.uid) {
-                let tags = await db.get().collection(COLLECTIONS.POSTS).find({ user: ObjectId(data.uid) }).toArray();
+                let tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
+                    {
+                        $match: {
+                            user: ObjectId(data.uid)
+                        }
+                    },
+                    {
+                        $sort: {
+                            timestamp: -1
+                        }
+                    }
+                ]).toArray();
 
                 if (tags) {
-                    // Sort tags based on timestamp in descending order
-                    tags.sort((a, b) => b.timestamp - a.timestamp);
-
                     return { status: true, tag: tags };
                 } else {
                     return { status: false };
                 }
             } else {
                 return { status: false };
+            }
+        } catch (error) {
+            throw { status: false, message: 'An error occurred while finding tags' };
+        }
+    },
+    findAllTags: async () => {
+        try {
+            const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
+                {
+                    $sort: {
+                        timestamp: -1
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $project: {
+                        user: { $arrayElemAt: ["$user", 0] },
+                        content: 1,
+                        timestamp: 1,
+                        upvote: 1,
+                        downvote: 1,
+                        replies: 1,
+                    }
+                }
+            ]).toArray();
+
+            console.log(tags)
+
+            if (tags.length > 0) {
+                return { status: true, tags };
+            } else {
+                return { status: false, tags: [] }; // Return an empty array when there are no tags
             }
         } catch (error) {
             throw { status: false, message: 'An error occurred while finding tags' };
@@ -364,7 +472,8 @@ module.exports = {
                 content: profanity.maskBadWords(badFilter.clean(data.content)),
                 timestamp: timestamp,
                 upvote: [],
-                downvote: []
+                downvote: [],
+                replies: [],
             };
             let tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
             const regex = /@([a-zA-Z0-9_]+)/g;
@@ -421,6 +530,205 @@ module.exports = {
         } catch (error) {
             console.log(error)
             throw { status: false, message: 'An error occurred while uploading tag' };
+        }
+    },
+    delTag: async ({ uid, tagId }) => {
+        try {
+            let res = await db.get().collection(COLLECTIONS.POSTS).deleteOne({ _id: ObjectId(tagId), user: ObjectId(uid) });
+            if (res) {
+                return { status: true };
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            console.log(error)
+            throw { status: false, message: 'An error occurred while deleting tag' };
+        }
+    },
+    upVote: async ({ tagId, uid }) => {
+        try {
+            // Find the tag by ID and check if it exists
+            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+            if (!tag) {
+                return { status: false, message: 'Tag not found', tags: null };
+            }
+
+            // Check if the user has already upvoted this tag
+            const hasDownvoted = tag.downvote.includes(uid);
+
+            if (hasDownvoted) {
+                // Remove the user's UID from the upvote array and add it to the downvote array
+                await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                    { _id: ObjectId(tagId) },
+                    { $pull: { downvote: uid }, $push: { upvote: uid } }
+                );
+            } else {
+
+                // Check if the user has already upvoted this tag
+                const hasUpvoted = tag.upvote.includes(uid);
+
+                if (!hasUpvoted) {
+                    // Add the user's UID to the upvote array
+                    await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                        { _id: ObjectId(tagId) },
+                        { $push: { upvote: uid } }
+                    );
+
+                    // Retrieve the updated tag after upvoting
+                    const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                } else {
+                    // Remove the user's UID from the upvote array
+                    await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                        { _id: ObjectId(tagId) },
+                        { $pull: { upvote: uid } }
+                    );
+
+                    // Retrieve the updated tag after removing the upvote
+                    const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                }
+            }
+            const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
+                {
+                    $sort: {
+                        timestamp: -1
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $project: {
+                        user: { $arrayElemAt: ["$user", 0] },
+                        content: 1,
+                        timestamp: 1,
+                        upvote: 1,
+                        downvote: 1,
+                        replies: 1,
+                    }
+                }
+            ]).toArray();
+
+            return { status: true, tags };
+        } catch (error) {
+            console.error('Error in upvoteTag:', error);
+            throw { status: false, message: 'An error occurred while upvoting the tag', tags: null };
+        }
+    },
+    downVote: async ({ tagId, uid }) => {
+        try {
+            try {
+                // Find the tag by ID and check if it exists
+                const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                if (!tag) {
+                    return { status: false, message: 'Tag not found', tags: null };
+                }
+
+                // Check if the user has already upvoted this tag
+                const hasUpvoted = tag.upvote.includes(uid);
+
+                if (hasUpvoted) {
+                    // Remove the user's UID from the upvote array and add it to the downvote array
+                    await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                        { _id: ObjectId(tagId) },
+                        { $pull: { upvote: uid }, $push: { downvote: uid } }
+                    );
+                } else {
+
+                    // Check if the user has already downvoted this tag
+                    const hasDownvoted = tag.downvote.includes(uid);
+
+                    if (!hasDownvoted) {
+                        // Add the user's UID to the downvote array
+                        await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                            { _id: ObjectId(tagId) },
+                            { $push: { downvote: uid } }
+                        );
+
+                        // Retrieve the updated tag after downvoting
+                        const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                    } else {
+                        // Remove the user's UID from the downvote array
+                        await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                            { _id: ObjectId(tagId) },
+                            { $pull: { downvote: uid } }
+                        );
+
+                        // Retrieve the updated tag after removing the downvote
+                        const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                        return { status: true, message: 'Downvote removed', tags };
+                    }
+                }
+                const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
+                    {
+                        $sort: {
+                            timestamp: -1
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "user",
+                            foreignField: "_id",
+                            as: "user"
+                        }
+                    },
+                    {
+                        $project: {
+                            user: { $arrayElemAt: ["$user", 0] },
+                            content: 1,
+                            timestamp: 1,
+                            upvote: 1,
+                            downvote: 1,
+                            replies: 1,
+                        }
+                    }
+                ]).toArray();
+                return { status: true, tags };
+            } catch (error) {
+                console.error('Error in downvoteTag:', error);
+                throw { status: false, message: 'An error occurred while downvoting the tag', tags: null };
+            }
+        } catch (error) {
+            console.error('Error in upvoteTag:', error);
+            throw { status: false, message: 'An error occurred while upvoting the tag', tags: null };
+        }
+    },
+    findTag: async ({ tagId }) => {
+        try {
+            const aggregationPipeline = [
+                {
+                    $match: {
+                        _id: ObjectId(tagId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: COLLECTIONS.USERS,
+                        localField: 'user',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $unwind: '$user'
+                }
+            ];
+
+            const tag = await db.get().collection(COLLECTIONS.POSTS).aggregate(aggregationPipeline).next();
+
+            if (tag) {
+                return { status: true, tag };
+            } else {
+                return { status: false, message: 'Tag not found', tag: null };
+            }
+        } catch (error) {
+            console.error('Error in findTag:', error);
+            throw { status: false, message: 'An error occurred while finding the tag', tag: null };
         }
     }
 };
