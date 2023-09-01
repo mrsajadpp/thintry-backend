@@ -453,9 +453,7 @@ module.exports = {
                 }
             ]).toArray();
 
-            console.log(tags)
-
-            if (tags.length > 0) {
+            if (tags) {
                 return { status: true, tags };
             } else {
                 return { status: false, tags: [] }; // Return an empty array when there are no tags
