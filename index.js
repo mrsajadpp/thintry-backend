@@ -10,7 +10,7 @@ const cors = require('cors');
 const axios = require('axios');
 const userData = require('./database/user')
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 
 app.use(cookieSession({
     name: 'session',
