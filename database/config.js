@@ -4,7 +4,7 @@ let state = {
 }
 function connect(done) {
     try {
-        let url = 'mongodb+srv://sajad:310410@thintry.w1prwve.mongodb.net/';
+        let url = procces.env.STRING;
         let dbname = 'thintry';
         MongoClient.connect(url, (err, data) => {
             if (err) return done(err);
