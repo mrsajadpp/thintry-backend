@@ -173,6 +173,7 @@ app.get('/tag/new', async (req, res, next) => {
 
 app.get('/fetch/user/tags/all', async (req, res, next) => {
     try {
+        console.log(req.query)
         let response = await userData.findAllTags();
         if (response.status) {
             res.json({ status: true, tags: response.tags });
