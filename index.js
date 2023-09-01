@@ -172,7 +172,7 @@ app.get('/tag/new', async (req, res, next) => {
     }
 });
 
-app.post('/fetch/user/tags/all', async (req, res, next) => {
+app.get('/fetch/user/tags/all', async (req, res, next) => {
     try {
         console.log('hi')
         let response = await userData.findAllTags();
