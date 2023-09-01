@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { ObjectId } = require('mongodb');
 const bcrypt = require("bcrypt");
 const express = require("express");
