@@ -246,7 +246,12 @@ app.get('/fetch/tag', async (req, res, next) => {
     }
 })
 
-app.get('/fetch/tag/replies', async (req, res, next) => {})
+app.get('/fetch/tag/replies', async (req, res, next) => {});
+
+app.get('*', (req, res, next) => {
+    console.log('Not Found!');
+    res.json({ status: 404, message:'Api not found!' })
+})
 
 app.listen(port, () => {
     console.log("Server started : " + port)

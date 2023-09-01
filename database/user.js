@@ -201,7 +201,7 @@ module.exports = {
                                     </tr>
                                     <tr>
                                         <td style="text-align:center;">
-                                            <a href="https://thintry.com/" title="logo" target="_blank">
+                                            <a href="http://api.thintry.com/" title="logo" target="_blank">
                                                 <img width="200" src="https://i.postimg.cc/SsgJL0SN/thintry-logo.png"
                                                     title="logo" alt="logo">
                                             </a>
@@ -258,7 +258,7 @@ module.exports = {
                                                 </tr>
                                                 <tr>
                                                     <td style="padding:0 35px;"> 
-                                                        <a href="https://thintry.com/" title="logo" target="_blank">
+                                                        <a href="http://api.thintry.com/" title="logo" target="_blank">
                                                             <img width="200" src="https://i.postimg.cc/SsgJL0SN/thintry-logo.png"
                                                                 title="logo" alt="logo">
                                                         </a>
@@ -287,7 +287,7 @@ module.exports = {
                                         <td style="text-align:center;">
                                             <p
                                                 style="font-size:14px; color:rgba(69, 80, 86, 0.7411764705882353); line-height:18px; margin:0 0 0;">
-                                                <strong>https://thintry.com/</strong></p>
+                                                <strong>http://api.thintry.com/</strong></p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -488,7 +488,7 @@ module.exports = {
                                         email: user.email,
                                         subject: `${client.firstname} ${client.lastname} mentioned you!`,
                                         text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                        content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="https://thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                        content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                     });
                                 }
                             }).catch((error) => {
@@ -511,7 +511,7 @@ module.exports = {
                                     email: user.email,
                                     subject: "Something important!",
                                     text: `Hello ${user.firstname}, important post by `,
-                                    content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="https://thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                 });
                             });
                         }, 1000);
