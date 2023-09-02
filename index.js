@@ -283,6 +283,20 @@ app.post('/tag/upvote', async (req, res, next) => {
     }
 });
 
+app.post('/tag/reply/upvote', async (req, res, next) => {
+    try {
+        // let response = await userData.upVote(req.body);
+        // if (response.status) {
+        //     res.json({ status: true, tags: response.tags });
+        // } else {
+        //     res.json({ status: false });
+        // }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+});
+
 app.post('/tag/downvote', async (req, res, next) => {
     try {
         let response = await userData.downVote(req.body);
@@ -291,6 +305,20 @@ app.post('/tag/downvote', async (req, res, next) => {
         } else {
             res.json({ status: false });
         }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+});
+
+app.post('/tag/reply/downvote', async (req, res, next) => {
+    try {
+        // let response = await userData.downVote(req.body);
+        // if (response.status) {
+        //     res.json({ status: true, tags: response.tags });
+        // } else {
+        //     res.json({ status: false });
+        // }
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
