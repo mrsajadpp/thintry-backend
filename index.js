@@ -156,7 +156,7 @@ app.post('/user/update', async (req, res) => {
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
         } else {
-            res.json({ status: false });
+            res.json({ status: false, message: 'User update failed', error: updatedUser.error }); // Include error details here
         }
     } catch (error) {
         console.error(error);
