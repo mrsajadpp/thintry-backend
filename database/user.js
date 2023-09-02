@@ -7,6 +7,8 @@ var badFilter = new Filter({ placeHolder: '*', replaceRegex: /[A-Za-z0-9가-힣_
 var profanity = require("profanity-hindi");
 const saltRounds = 10;
 var nodemailer = require('nodemailer');
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 let COLLECTIONS = {
     USERS: 'users',
@@ -428,6 +430,14 @@ module.exports = {
     findAllTags: async () => {
         try {
             const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
+                {
+                    $match: {
+                        timestamp: {
+                            $gte: today, // Greater than or equal to the start of today
+                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than the start of tomorrow
+                        }
+                    }
+                },
                 {
                     $sort: {
                         timestamp: -1
