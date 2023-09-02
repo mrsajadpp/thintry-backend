@@ -136,7 +136,8 @@ app.post('/user/update', async (req, res) => {
         }
 
         const profilePicture = req.files.profilePicture;
-        const userId = req.body._id;
+        const userId = req.body.id;
+        console.log(userId)
 
         // Ensure the uploads directory exists
         const uploadDir = path.join(__dirname, 'uploads/profiles');
