@@ -175,7 +175,6 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 
 app.post('/user/update', async (req, res) => {
     try {
-        console.log(req.body)
         let profilePicture = false;
         if (req.files) {
             profilePicture = await req.files.profilePicture;
@@ -193,8 +192,6 @@ app.post('/user/update', async (req, res) => {
             const profilePicturePath = path.join(uploadDir, `${userId}.jpeg`);
             profilePicture.mv(profilePicturePath);
         }
-
-        console.log(req.body)
 
         // Assuming 'updateUser' is an async function for updating user data
         const updatedUser = await userData.updateUser(req.body);
