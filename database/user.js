@@ -388,6 +388,7 @@ module.exports = {
     },
     updateUser: async (userData) => {
         try {
+            console.log(userData)
             let upUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate({ _id: ObjectId(userData._id) }, { $set: { username: userData.username.toLowerCase, firstname: userData.firstname, lastname: userData.lastname || '', about: userData.about, profile: `/profile/${userData._id}.jpeg`, dob: { day: userData.day, month: userData.month, year: userData.year } } }).catch(error => console.log(error));
             let newData = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: upUser.value._id });
             if (newData) {
@@ -396,6 +397,7 @@ module.exports = {
                 return { status: false };
             }
         } catch (error) {
+            console.log(error)
             throw { status: false, message: 'An error occurred while updating user' };
         }
     },
