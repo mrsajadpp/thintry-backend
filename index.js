@@ -175,6 +175,7 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 
 app.post('/user/update', async (req, res) => {
     try {
+        console.log(req.body)
         // Check if a profile picture was uploaded
         if (!req.files || !req.files.profilePicture) {
             return res.status(400).json({ status: false, message: 'Profile picture is missing' });
@@ -192,6 +193,8 @@ app.post('/user/update', async (req, res) => {
         // Move the uploaded profile picture to the appropriate location
         const profilePicturePath = path.join(uploadDir, `${userId}.jpeg`);
         profilePicture.mv(profilePicturePath);
+
+        console.log(req.body)
 
         // Assuming 'updateUser' is an async function for updating user data
         const updatedUser = await userData.updateUser(req.body);
