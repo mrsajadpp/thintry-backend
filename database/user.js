@@ -431,6 +431,14 @@ module.exports = {
         try {
             const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
                 {
+                    $match: {
+                        timestamp: {
+                            $gte: today, // Greater than or equal to the start of today
+                            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) // Less than the start of tomorrow
+                        }
+                    }
+                },
+                {
                     $sort: {
                         timestamp: -1
                     }
