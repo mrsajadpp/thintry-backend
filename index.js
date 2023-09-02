@@ -145,10 +145,10 @@ app.get('/fetch/user/posts', async (req, res, next) => {
     }
 });
 
-app.get('/user/update', upload.single('profilePicture'), async (req, res, next) => {
+app.post('/user/update', upload.single('profilePicture'), async (req, res, next) => {
     try {
-        console.log(req.query)
-        let updatedUser = await userData.updateUser(req.query);
+        console.log(reqbody)
+        let updatedUser = await userData.updateUser(req.body);
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
         } else {
