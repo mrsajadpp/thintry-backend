@@ -9,29 +9,12 @@ const compression = require('compression');
 const sanitizeHtml = require('sanitize-html');
 const cors = require('cors');
 const axios = require('axios');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const userData = require('./database/user')
 const app = express();
 const port = process.env.PORT || 3002;
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/profiles/');
-    },
-    filename: function (req, file, cb) {
-        // Get the user's ID from the request (you need to have a way to access it)
-        const userId = req.query._id.toString(); // Adjust this line according to your user ID retrieval logic
-
-        // Generate the filename as the user's ID with the original file extension
-        const filename = `${userId}${path.extname(file.originalname)}`;
-
-        cb(null, filename);
-    },
-});
-
-const upload = multer({ storage: storage });
 
 app.use(cookieSession({
     name: 'session',
@@ -147,13 +130,28 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 
 app.post('/user/update', async (req, res, next) => {
     try {
-        console.log(req.body);
-        console.log(req.files.profilePicture)
-        req.files.profilePicture.mv(__dirname + '/uploads/profiles/' + req.body._id + '.jpeg');
+        // Check if a profile picture was uploaded
+        if (!req.files || !req.files.profilePicture) {
+            return res.status(400).json({ status: false, message: 'Profile picture is missing' });
+        }
 
-        let updatedUser = await userData.updateUser(req.body);
+        const profilePicture = req.files.profilePicture;
+        const userId = req.body._id;
 
-        console.log(updatedUser)
+        // Ensure the uploads directory exists
+        const uploadDir = path.join(__dirname, 'uploads/profiles');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Move the uploaded profile picture to the appropriate location
+        const profilePicturePath = path.join(uploadDir, `${userId}.jpeg`);
+        profilePicture.mv(profilePicturePath);
+
+        // Assuming 'updateUser' is an async function for updating user data
+        const updatedUser = await userData.updateUser(req.body);
+
+        console.log(updatedUser);
 
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
