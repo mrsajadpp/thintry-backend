@@ -145,20 +145,33 @@ app.get('/fetch/user/posts', async (req, res, next) => {
     }
 });
 
-app.post('/user/update', upload.single('profilePicture'), async (req, res, next) => {
+app.post('/user/update', async (req, res, next) => {
     try {
-        console.log(reqbody)
-        let updatedUser = await userData.updateUser(req.body);
-        if (updatedUser.status) {
-            res.json({ status: true, user: updatedUser.user });
-        } else {
-            res.json({ status: false });
-        }
+        console.log(req.body); // Corrected typo: reqbody -> req.body
+        const profilePicture = await req.files.profilePicture;
+        const filePath = 'uploads/profiles/' + req.body._id + '.jpeg';
+        profilePicture.mv(filePath, async (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ status: false, message: 'Error uploading file.' });
+            }
+
+            // Update the user with the new file path or perform other actions as needed
+            req.body.profilePicture = filePath;
+            let updatedUser = await userData.updateUser(req.body);
+
+            if (updatedUser.status) {
+                res.json({ status: true, user: updatedUser.user });
+            } else {
+                res.json({ status: false });
+            }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while updating the user' });
     }
 });
+
 
 app.get('/fetch/user/tags', async (req, res, next) => {
     try {
