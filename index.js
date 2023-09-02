@@ -147,27 +147,17 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 
 app.post('/user/update', async (req, res, next) => {
     try {
-        console.log(req.body); // Corrected typo: reqbody -> req.body
-        const profilePicture = await req.files.profilePicture;
-        const filePath = await __dirname + '/uploads/profiles/' + req.body._id + '.jpeg';
-        console.log(filePath)
-        console.log(profilePicture)
-        profilePicture.mv(filePath, async (err) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ status: false, message: 'Error uploading file.' });
-            }
+        console.log(req.body);
+        console.log(req.files.profilePicture)
+        req.files.profilePicture.mv(__dirname + '/uploads/profiles/' + req.session.user._id + '.jpeg');
 
-            // Update the user with the new file path or perform other actions as needed
-            req.body.profilePicture = filePath;
-            let updatedUser = await userData.updateUser(req.body);
+        let updatedUser = await userData.updateUser(req.body);
 
-            if (updatedUser.status) {
-                res.json({ status: true, user: updatedUser.user });
-            } else {
-                res.json({ status: false });
-            }
-        });
+        if (updatedUser.status) {
+            res.json({ status: true, user: updatedUser.user });
+        } else {
+            res.json({ status: false });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while updating the user' });
