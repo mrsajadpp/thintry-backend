@@ -149,7 +149,8 @@ app.post('/user/update', async (req, res) => {
         profilePicture.mv(profilePicturePath);
 
         // Assuming 'updateUser' is an async function for updating user data
-        console.log(1)
+        console.log(1);
+        console.log(req.body)
         const updatedUser = await userData.updateUser(req.body);
 
         console.log(updatedUser);
