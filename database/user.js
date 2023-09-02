@@ -749,7 +749,7 @@ module.exports = {
                 {
                     $lookup: {
                         from: "users",
-                        localField: "user",
+                        localField: "user_id",
                         foreignField: "_id",
                         as: "user"
                     }
