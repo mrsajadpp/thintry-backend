@@ -388,7 +388,7 @@ module.exports = {
     },
     updateUser: async (userData) => {
         try {
-            let upUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate({ _id: ObjectId(userData._id) }, { $set: { username: userData.username.toLowerCase, firstname: userData.firstname, lastname: userData.lastname || '', about: userData.about, profile: userData.profile, dob: userData.dob } }).catch(error => console.log(error));
+            let upUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate({ _id: ObjectId(userData._id) }, { $set: { username: userData.username.toLowerCase, firstname: userData.firstname, lastname: userData.lastname || '', about: userData.about, profile: userData.profile, dob: { day: userData.day, month: userData.month, year: userData.year } } }).catch(error => console.log(error));
             let newData = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: upUser.value._id });
             if (newData) {
                 return { status: true, user: newData };
