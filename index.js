@@ -128,7 +128,7 @@ app.get('/fetch/user/posts', async (req, res, next) => {
     }
 });
 
-app.post('/user/update', async (req, res, next) => {
+app.post('/user/update', async (req, res) => {
     try {
         // Check if a profile picture was uploaded
         if (!req.files || !req.files.profilePicture) {
@@ -160,7 +160,7 @@ app.post('/user/update', async (req, res, next) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: false, message: 'An error occurred while updating the user' });
+        res.status(500).json({ status: false, message: 'An error occurred while updating the user', error: error.message });
     }
 });
 
