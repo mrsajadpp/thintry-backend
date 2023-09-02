@@ -9,9 +9,29 @@ const compression = require('compression');
 const sanitizeHtml = require('sanitize-html');
 const cors = require('cors');
 const axios = require('axios');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const userData = require('./database/user')
 const app = express();
 const port = process.env.PORT || 3002;
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/profiles/');
+    },
+    filename: function (req, file, cb) {
+        // Get the user's ID from the request (you need to have a way to access it)
+        const userId = req.query._id.toString(); // Adjust this line according to your user ID retrieval logic
+
+        // Generate the filename as the user's ID with the original file extension
+        const filename = `${userId}${path.extname(file.originalname)}`;
+
+        cb(null, filename);
+    },
+});
+
+const upload = multer({ storage: storage });
 
 app.use(cookieSession({
     name: 'session',
@@ -125,7 +145,7 @@ app.get('/fetch/user/posts', async (req, res, next) => {
     }
 });
 
-app.get('/user/update', async (req, res, next) => {
+app.get('/user/update', upload.single('profilePicture'), async (req, res, next) => {
     try {
         let updatedUser = await userData.updateUser(req.query);
         if (updatedUser.status) {
@@ -247,16 +267,16 @@ app.get('/fetch/tag', async (req, res, next) => {
     }
 })
 
-app.get('/fetch/tag/replies', async (req, res, next) => {});
+app.get('/fetch/tag/replies', async (req, res, next) => { });
 
 app.get('*', (req, res, next) => {
     console.log('Not Found!');
-    res.json({ status: 404, message:'Api not found!' })
+    res.json({ status: 404, message: 'Api not found!' })
 });
 
 app.post('*', (req, res, next) => {
     console.log('Not Found!');
-    res.json({ status: 404, message:'Api not found!' })
+    res.json({ status: 404, message: 'Api not found!' })
 });
 
 app.listen(port, () => {
