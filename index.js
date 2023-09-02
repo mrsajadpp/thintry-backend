@@ -176,23 +176,23 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 app.post('/user/update', async (req, res) => {
     try {
         console.log(req.body)
-        // Check if a profile picture was uploaded
-        if (!req.files || !req.files.profilePicture) {
-            return res.status(400).json({ status: false, message: 'Profile picture is missing' });
+        let profilePicture = false;
+        if (req.files) {
+            profilePicture = await req.files.profilePicture;
         }
-
-        const profilePicture = req.files.profilePicture;
         const userId = req.body.uid;
 
         // Ensure the uploads directory exists
-        const uploadDir = path.join(__dirname, 'uploads/profiles');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
+        if (profilePicture) {
+            const uploadDir = path.join(__dirname, 'uploads/profiles');
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
 
-        // Move the uploaded profile picture to the appropriate location
-        const profilePicturePath = path.join(uploadDir, `${userId}.jpeg`);
-        profilePicture.mv(profilePicturePath);
+            // Move the uploaded profile picture to the appropriate location
+            const profilePicturePath = path.join(uploadDir, `${userId}.jpeg`);
+            profilePicture.mv(profilePicturePath);
+        }
 
         console.log(req.body)
 
@@ -342,7 +342,7 @@ app.get('/fetch/tag', async (req, res, next) => {
     }
 })
 
-app.get('/fetch/tag/replies', async (req, res, next) => { 
+app.get('/fetch/tag/replies', async (req, res, next) => {
     try {
         let response = await userData.findReplies(req.query);
         if (response.status) {
@@ -354,7 +354,7 @@ app.get('/fetch/tag/replies', async (req, res, next) => {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
     }
- });
+});
 
 app.get('*', (req, res, next) => {
     res.json({ status: false, message: 'Api not found!' })
