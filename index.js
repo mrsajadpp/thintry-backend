@@ -149,7 +149,8 @@ app.post('/user/update', async (req, res, next) => {
     try {
         console.log(req.body); // Corrected typo: reqbody -> req.body
         const profilePicture = await req.files.profilePicture;
-        const filePath = 'uploads/profiles/' + req.body._id + '.jpeg';
+        const filePath = __dirname + '/uploads/profiles/' + req.body._id + '.jpeg';
+        console.log(filePath)
         profilePicture.mv(filePath, async (err) => {
             if (err) {
                 console.error(err);
