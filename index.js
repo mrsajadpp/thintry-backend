@@ -153,6 +153,8 @@ app.post('/user/update', async (req, res, next) => {
 
         let updatedUser = await userData.updateUser(req.body);
 
+        console.log(updatedUser)
+
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
         } else {
