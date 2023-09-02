@@ -709,15 +709,27 @@ module.exports = {
                     }
                 },
                 {
-                    $lookup: {
-                        from: COLLECTIONS.USERS,
-                        localField: 'user',
-                        foreignField: '_id',
-                        as: 'user'
+                    $sort: {
+                        timestamp: -1
                     }
                 },
                 {
-                    $unwind: '$user'
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $project: {
+                        user: { $arrayElemAt: ["$user", 0] },
+                        content: 1,
+                        timestamp: 1,
+                        upvote: 1,
+                        downvote: 1,
+                        replies: 1,
+                    }
                 }
             ];
 
