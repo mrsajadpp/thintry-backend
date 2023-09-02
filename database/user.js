@@ -577,7 +577,7 @@ module.exports = {
                     );
 
                     // Retrieve the updated tag after upvoting
-                    const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                    await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
                 } else {
                     // Remove the user's UID from the upvote array
                     await db.get().collection(COLLECTIONS.POSTS).updateOne(
@@ -586,7 +586,7 @@ module.exports = {
                     );
 
                     // Retrieve the updated tag after removing the upvote
-                    const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                    await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
                 }
             }
             const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
@@ -652,7 +652,7 @@ module.exports = {
                         );
 
                         // Retrieve the updated tag after downvoting
-                        const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                       await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
                     } else {
                         // Remove the user's UID from the downvote array
                         await db.get().collection(COLLECTIONS.POSTS).updateOne(
@@ -661,8 +661,7 @@ module.exports = {
                         );
 
                         // Retrieve the updated tag after removing the downvote
-                        const updatedTag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
-                        return { status: true, message: 'Downvote removed', tags };
+                        await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
                     }
                 }
                 const tags = await db.get().collection(COLLECTIONS.POSTS).aggregate([
