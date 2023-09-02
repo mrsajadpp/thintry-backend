@@ -147,6 +147,7 @@ app.get('/fetch/user/posts', async (req, res, next) => {
 
 app.get('/user/update', upload.single('profilePicture'), async (req, res, next) => {
     try {
+        console.log(req.query)
         let updatedUser = await userData.updateUser(req.query);
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
