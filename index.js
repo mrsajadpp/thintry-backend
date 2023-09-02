@@ -149,7 +149,7 @@ app.post('/user/update', async (req, res, next) => {
     try {
         console.log(req.body);
         console.log(req.files.profilePicture)
-        req.files.profilePicture.mv(__dirname + '/uploads/profiles/' + req.session.user._id + '.jpeg');
+        req.files.profilePicture.mv(__dirname + '/uploads/profiles/' + req.body._id + '.jpeg');
 
         let updatedUser = await userData.updateUser(req.body);
 
