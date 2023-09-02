@@ -12,7 +12,8 @@ today.setHours(0, 0, 0, 0);
 
 let COLLECTIONS = {
     USERS: 'users',
-    POSTS: 'posts'
+    POSTS: 'posts',
+    REPLIES: 'replies'
 }
 
 let transporter = nodemailer.createTransport({
@@ -730,6 +731,37 @@ module.exports = {
         } catch (error) {
             console.error('Error in findTag:', error);
             throw { status: false, message: 'An error occurred while finding the tag', tag: null };
+        }
+    },
+    findReplies: async ({ tagId }) => {
+        try {
+            const aggregationPipeline = [
+                {
+                    $match: {
+                        tag_id: ObjectId(tagId)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: COLLECTIONS.USERS,
+                        localField: 'user',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $unwind: '$user'
+                }
+            ];
+            const replies = await db.get().collection(COLLECTIONS.REPLIES).aggregate(aggregationPipeline).toArray();
+            if (replies) {
+                return { status: true, replies };
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            console.error('Error in findTag replies:', error);
+            throw { status: false, message: 'An error occurred while finding the tag relies', tag: null };
         }
     }
 };

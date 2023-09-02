@@ -48,6 +48,34 @@ app.get('/profile/:imagename', (req, res) => {
     }
 });
 
+app.get('/audio/:audioname', (req, res) => {
+    const audioname = req.params.audioname;
+    const audioPath = path.join(__dirname, 'uploads', 'audios', audioname);
+
+    // Check if the image file exists
+    if (fs.existsSync(audioPath)) {
+        // Send the image as a response
+        res.sendFile(audioPath);
+    } else {
+        // Handle the case where the image doesn't exist
+        res.status(404).send('Image not found');
+    }
+});
+
+app.get('/image/:imagename', (req, res) => {
+    const imagename = req.params.imagename;
+    const imagePath = path.join(__dirname, 'uploads', 'images', imagename);
+
+    // Check if the image file exists
+    if (fs.existsSync(imagePath)) {
+        // Send the image as a response
+        res.sendFile(imagePath);
+    } else {
+        // Handle the case where the image doesn't exist
+        res.status(404).send('Image not found');
+    }
+});
+
 app.get('/auth/check', (req, res, next) => {
     try {
         const isLogged = req.session.logged ? true : false;
@@ -283,7 +311,19 @@ app.get('/fetch/tag', async (req, res, next) => {
     }
 })
 
-app.get('/fetch/tag/replies', async (req, res, next) => { });
+app.get('/fetch/tag/replies', async (req, res, next) => { 
+    try {
+        let response = await userData.findReplies(req.query);
+        if (response.status) {
+            res.json({ status: true, replies: response.replies });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+ });
 
 app.get('*', (req, res, next) => {
     res.json({ status: false, message: 'Api not found!' })
