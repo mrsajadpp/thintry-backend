@@ -137,7 +137,6 @@ app.post('/user/update', async (req, res) => {
 
         const profilePicture = req.files.profilePicture;
         const userId = req.body.uid;
-        console.log(userId)
 
         // Ensure the uploads directory exists
         const uploadDir = path.join(__dirname, 'uploads/profiles');
@@ -150,11 +149,7 @@ app.post('/user/update', async (req, res) => {
         profilePicture.mv(profilePicturePath);
 
         // Assuming 'updateUser' is an async function for updating user data
-        console.log(1);
-        console.log(req.body)
         const updatedUser = await userData.updateUser(req.body);
-
-        console.log(updatedUser);
 
         if (updatedUser.status) {
             res.json({ status: true, user: updatedUser.user });
@@ -203,7 +198,6 @@ app.get('/tag/new', async (req, res, next) => {
 
 app.get('/fetch/user/tags/all', async (req, res, next) => {
     try {
-        console.log('hi')
         let response = await userData.findAllTags();
         if (response.status) {
             res.json({ status: true, tags: response.tags });
@@ -218,7 +212,6 @@ app.get('/fetch/user/tags/all', async (req, res, next) => {
 
 app.get('/tag/delete', async (req, res, next) => {
     try {
-        console.log(req.query)
         let response = await userData.delTag(req.query);
         if (response.status) {
             res.json({ status: true });
@@ -233,7 +226,6 @@ app.get('/tag/delete', async (req, res, next) => {
 
 app.post('/tag/upvote', async (req, res, next) => {
     try {
-        console.log(req.body);
         let response = await userData.upVote(req.body);
         if (response.status) {
             res.json({ status: true, tags: response.tags });
@@ -248,7 +240,6 @@ app.post('/tag/upvote', async (req, res, next) => {
 
 app.post('/tag/downvote', async (req, res, next) => {
     try {
-        console.log(req.body);
         let response = await userData.downVote(req.body);
         if (response.status) {
             res.json({ status: true, tags: response.tags });
@@ -263,7 +254,6 @@ app.post('/tag/downvote', async (req, res, next) => {
 
 app.get('/fetch/tag', async (req, res, next) => {
     try {
-        console.log(req.query);
         let response = await userData.findTag(req.query);
         if (response.status) {
             res.json({ status: true, tag: response.tag });
@@ -279,12 +269,10 @@ app.get('/fetch/tag', async (req, res, next) => {
 app.get('/fetch/tag/replies', async (req, res, next) => { });
 
 app.get('*', (req, res, next) => {
-    console.log('Not Found!');
     res.json({ status: false, message: 'Api not found!' })
 });
 
 app.post('*', (req, res, next) => {
-    console.log('Not Found!');
     res.json({ status: false, message: 'Api not found!' })
 });
 
