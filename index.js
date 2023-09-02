@@ -31,6 +31,23 @@ app.use((req, res, next) => {
     next();
 });
 
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.get('/profile/:imagename', (req, res) => {
+    const imagename = req.params.imagename;
+    const imagePath = path.join(__dirname, 'uploads', 'profiles', imagename);
+
+    // Check if the image file exists
+    if (fs.existsSync(imagePath)) {
+        // Send the image as a response
+        res.sendFile(imagePath);
+    } else {
+        // Handle the case where the image doesn't exist
+        res.status(404).send('Image not found');
+    }
+});
+
 app.get('/auth/check', (req, res, next) => {
     try {
         const isLogged = req.session.logged ? true : false;
