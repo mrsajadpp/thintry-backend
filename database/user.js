@@ -738,21 +738,34 @@ module.exports = {
             const aggregationPipeline = [
                 {
                     $match: {
-                        tag_id: ObjectId(tagId)
+                        post_id: ObjectId(tagId)
+                    }
+                },
+                {
+                    $sort: {
+                        timestamp: -1
                     }
                 },
                 {
                     $lookup: {
-                        from: COLLECTIONS.USERS,
-                        localField: 'user',
-                        foreignField: '_id',
-                        as: 'user'
+                        from: "users",
+                        localField: "user",
+                        foreignField: "_id",
+                        as: "user"
                     }
                 },
                 {
-                    $unwind: '$user'
+                    $project: {
+                        user: { $arrayElemAt: ["$user", 0] },
+                        content: 1,
+                        timestamp: 1,
+                        upvote: 1,
+                        downvote: 1,
+                        replies: 1,
+                    }
                 }
             ];
+
             const replies = await db.get().collection(COLLECTIONS.REPLIES).aggregate(aggregationPipeline).toArray();
             if (replies) {
                 return { status: true, replies };
@@ -761,7 +774,7 @@ module.exports = {
             }
         } catch (error) {
             console.error('Error in findTag replies:', error);
-            throw { status: false, message: 'An error occurred while finding the tag relies', tag: null };
+            throw { status: false, message: 'An error occurred while finding the tag replies', tag: null };
         }
     }
 };
