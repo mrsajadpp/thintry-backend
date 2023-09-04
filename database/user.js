@@ -471,7 +471,7 @@ module.exports = {
             const timestamp = new Date(); // Get the current timestamp 
             const postData = {
                 user: ObjectId(data._id), // Assuming userId is the ID of the user creating the post
-                content: profanity.maskBadWords(data.content),
+                content: data.content,
                 timestamp: timestamp,
                 upvote: [], 
                 downvote: [],
@@ -490,7 +490,7 @@ module.exports = {
                                         email: user.email,
                                         subject: `${client.firstname} ${client.lastname} mentioned you!`,
                                         text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                        content: `${profanity.maskBadWords(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                        content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                     });
                                 }
                             }).catch((error) => {
@@ -513,7 +513,7 @@ module.exports = {
                                     email: user.email,
                                     subject: "Something important!",
                                     text: `Hello ${user.firstname}, important post by `,
-                                    content: `${profanity.maskBadWords(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                 });
                             });
                         }, 1000);
