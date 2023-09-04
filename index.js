@@ -222,13 +222,13 @@ app.get('/fetch/user/tags', async (req, res, next) => {
     }
 });
 
-app.get('/tag/new', async (req, res, next) => {
+app.post('/tag/new', async (req, res, next) => {
     try {
-        const sanitizedContent = await sanitizeHtml(req.query.content, {
-            allowedTags: [], // Remove all HTML tags
-            allowedAttributes: {} // No attributes allowed
-        });
-        req.query.content = await sanitizedContent;
+        // const sanitizedContent = await sanitizeHtml(req.query.content, {
+        //     allowedTags: [], // Remove all HTML tags
+        //     allowedAttributes: {} // No attributes allowed
+        // });
+        // req.query.content = await sanitizedContent;
         let tags = await userData.newTag(req.query);
         if (tags.status) {
             res.json({ status: true, tag: tags.tag });

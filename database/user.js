@@ -468,12 +468,12 @@ module.exports = {
     },
     newTag: async (data) => {
         try {
-            const timestamp = new Date(); // Get the current timestamp
+            const timestamp = new Date(); // Get the current timestamp 
             const postData = {
                 user: ObjectId(data._id), // Assuming userId is the ID of the user creating the post
-                content: profanity.maskBadWords(badFilter.clean(data.content)),
+                content: profanity.maskBadWords(data.content),
                 timestamp: timestamp,
-                upvote: [],
+                upvote: [], 
                 downvote: [],
                 replies: [],
             };
@@ -490,7 +490,7 @@ module.exports = {
                                         email: user.email,
                                         subject: `${client.firstname} ${client.lastname} mentioned you!`,
                                         text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                        content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                        content: `${profanity.maskBadWords(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                     });
                                 }
                             }).catch((error) => {
@@ -513,7 +513,7 @@ module.exports = {
                                     email: user.email,
                                     subject: "Something important!",
                                     text: `Hello ${user.firstname}, important post by `,
-                                    content: `${profanity.maskBadWords(badFilter.clean(data.content))}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    content: `${profanity.maskBadWords(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                 });
                             });
                         }, 1000);
