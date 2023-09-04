@@ -2,9 +2,8 @@ let db = require('./config.js')
 const ObjectId = require('mongodb').ObjectID;
 var bcrypt = require('bcrypt');
 const schedule = require('node-schedule');
-var Filter = require('bad-words');
-var badFilter = new Filter({ placeHolder: '*', replaceRegex: /[A-Za-z0-9가-힣_]/g, regex: /\*|\.|$/gi });
-var profanity = require("profanity-hindi");
+const Filter = require('bad-words');
+const filter = new Filter();
 const saltRounds = 10;
 var nodemailer = require('nodemailer');
 const today = new Date();
@@ -471,37 +470,39 @@ module.exports = {
             const timestamp = new Date(); // Get the current timestamp 
             const postData = {
                 user: ObjectId(data._id), // Assuming userId is the ID of the user creating the post
-                content: data.content,
+                content: filter.clean(data.content),
                 timestamp: timestamp,
-                upvote: [], 
+                upvote: [],
                 downvote: [],
                 replies: [],
             };
-            let tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
+            const tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
             const regex = /@([a-zA-Z0-9_]+)/g;
-            const usernames = data.content.match(regex);
-            setTimeout(() => {
-                if (data.content.match(regex)) {
-                    db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
-                        usernames.forEach(username => {
-                            db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@/g, '') }).then((user) => {
-                                if (user) {
-                                    sendMail({
-                                        email: user.email,
-                                        subject: `${client.firstname} ${client.lastname} mentioned you!`,
-                                        text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                        content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
-                                    });
-                                }
-                            }).catch((error) => {
-                                reject(error);
+            const usernames = data.content && typeof data.content === 'string' ? data.content.match(regex) : [];
+            if (usernames && usernames.length > 0) {
+                setTimeout(() => {
+                    if (data.content.match(regex)) {
+                        db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
+                            usernames.forEach(username => {
+                                db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@/g, '') }).then((user) => {
+                                    if (user) {
+                                        sendMail({
+                                            email: user.email,
+                                            subject: `${client.firstname} ${client.lastname} mentioned you!`,
+                                            text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
+                                            content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                        });
+                                    }
+                                }).catch((error) => {
+                                    reject(error);
+                                });
                             });
+                        }).catch((error) => {
+                            reject(error);
                         });
-                    }).catch((error) => {
-                        reject(error);
-                    });
-                }
-            }, 100);
+                    }
+                }, 100);
+            }
 
             setTimeout(() => {
                 db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
@@ -513,7 +514,7 @@ module.exports = {
                                     email: user.email,
                                     subject: "Something important!",
                                     text: `Hello ${user.firstname}, important post by `,
-                                    content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                 });
                             });
                         }, 1000);
@@ -652,7 +653,7 @@ module.exports = {
                         );
 
                         // Retrieve the updated tag after downvoting
-                       await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
+                        await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tagId) });
                     } else {
                         // Remove the user's UID from the downvote array
                         await db.get().collection(COLLECTIONS.POSTS).updateOne(
