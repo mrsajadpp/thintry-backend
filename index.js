@@ -229,7 +229,7 @@ app.post('/tag/new', async (req, res, next) => {
         //     allowedAttributes: {} // No attributes allowed
         // });
         // req.query.content = await sanitizedContent;
-        let tags = await userData.newTag(req.query);
+        let tags = await userData.newTag(req.body);
         if (tags.status) {
             res.json({ status: true, tag: tags.tag });
         } else {
