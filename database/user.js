@@ -479,28 +479,28 @@ module.exports = {
             const tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
             const regex = /@([a-zA-Z0-9_]+)/g;
             const usernames = data.content.match(regex);
-            if (usernames && usernames.length > 0) {
-                setTimeout(() => {
-                    db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
-                        usernames.forEach(username => {
-                            db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, '') }).then((user) => {
-                                if (user) {
-                                    sendMail({
-                                        email: user.email,
-                                        subject: `${client.firstname} ${client.lastname} mentioned you!`,
-                                        text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                        content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
-                                    });
-                                }
-                            }).catch((error) => {
-                                reject(error);
-                            });
+            console.log(usernames)
+            setTimeout(() => {
+                db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
+                    usernames.forEach(username => {
+                        console.log(username)
+                        db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, '') }).then((user) => {
+                            if (user) {
+                                sendMail({
+                                    email: user.email,
+                                    subject: `${client.firstname} ${client.lastname} mentioned you!`,
+                                    text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
+                                    content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                });
+                            }
+                        }).catch((error) => {
+                            reject(error);
                         });
-                    }).catch((error) => {
-                        reject(error);
                     });
-                }, 100);
-            }
+                }).catch((error) => {
+                    reject(error);
+                });
+            }, 100);
 
             setTimeout(() => {
                 db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
