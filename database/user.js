@@ -479,11 +479,10 @@ module.exports = {
             const tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
             const regex = /@([a-zA-Z0-9_]+)/g;
             const usernames = data.content.match(regex);
-            console.log(usernames)
             setTimeout(() => {
                 db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
                     usernames.forEach(username => {
-                        console.log(username)
+                        console.log(username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, ''));
                         db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, '') }).then((user) => {
                             if (user) {
                                 sendMail({
