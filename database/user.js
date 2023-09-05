@@ -3,7 +3,7 @@ const ObjectId = require('mongodb').ObjectID;
 var bcrypt = require('bcrypt');
 const schedule = require('node-schedule');
 const Filter = require('bad-words');
-const filter = new Filter();
+const filter = new Filter({ placeHolder: 'x' });
 const saltRounds = 10;
 var nodemailer = require('nodemailer');
 const today = new Date();
@@ -32,7 +32,7 @@ let sendMail = (data) => {
             to: data.email,
             subject: data.subject,
             text: data.text,
-            html: data.content
+            html: filter.clean(data.content)
         });
     }, 10);
     return;
@@ -470,7 +470,7 @@ module.exports = {
             const timestamp = new Date(); // Get the current timestamp 
             const postData = {
                 user: ObjectId(data._id), // Assuming userId is the ID of the user creating the post
-                content: data.content,
+                content: filter.clean(data.content),
                 timestamp: timestamp,
                 upvote: [],
                 downvote: [],
@@ -478,10 +478,10 @@ module.exports = {
             };
             const tag = await db.get().collection(COLLECTIONS.POSTS).insertOne(postData);
             const regex = /@([a-zA-Z0-9_]+)/g;
-            const usernames = data.content && typeof data.content === 'string' ? data.content.match(regex) : [];
+            const usernames = data.content.match(regex);
             if (usernames && usernames.length > 0) {
                 setTimeout(() => {
-                    if (data.content.match(regex)) {
+                    if (filter.clean(data.content).match(regex)) {
                         db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
                             usernames.forEach(username => {
                                 db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@/g, '') }).then((user) => {
@@ -490,7 +490,7 @@ module.exports = {
                                             email: user.email,
                                             subject: `${client.firstname} ${client.lastname} mentioned you!`,
                                             text: `Hello ${user.firstname}, ${client.firstname} ${client.lastname} mentioned you!`,
-                                            content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                            content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                         });
                                     }
                                 }).catch((error) => {
@@ -506,7 +506,7 @@ module.exports = {
 
             setTimeout(() => {
                 db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
-                    if (data.content.toLowerCase().includes("@everyone") && client.official) {
+                    if (filter.clean(data.content).toLowerCase().includes("@everyone") && client.official) {
                         setTimeout(async () => {
                             let users = await db.get().collection(COLLECTIONS.USERS).find().toArray();
                             users.forEach(user => {
@@ -514,7 +514,7 @@ module.exports = {
                                     email: user.email,
                                     subject: "Something important!",
                                     text: `Hello ${user.firstname}, important post by `,
-                                    content: `${data.content}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                                    content: `${filter.clean(data.content)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
                                 });
                             });
                         }, 1000);
