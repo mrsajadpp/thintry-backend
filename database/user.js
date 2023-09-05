@@ -482,8 +482,8 @@ module.exports = {
             setTimeout(() => {
                 db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data._id) }).then((client) => {
                     usernames.forEach(username => {
-                        console.log(username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, ''));
-                        db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@([a-zA-Z0-9_]+)/g, '') }).then((user) => {
+                        console.log(username.toLowerCase().replace(/@/g, ''));
+                        db.get().collection(COLLECTIONS.USERS).findOne({ username: username.toLowerCase().replace(/@/g, '') }).then((user) => {
                             if (user) {
                                 sendMail({
                                     email: user.email,
