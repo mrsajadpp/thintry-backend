@@ -21,7 +21,7 @@ let transporter = nodemailer.createTransport({
     secure: false,
     auth: {
         user: 'noreply.thintry@gmail.com',
-        pass: process.env.PASS
+        pass: process.env.SMTP_PASS
     }
 });
 
