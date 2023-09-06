@@ -885,7 +885,7 @@ module.exports = {
     ifFollowing: (followerId, followingId) => {
         return new Promise((resolve, reject) => {
             db.get().collection(COLLECTIONS.USERS).findOne(
-                { _id: ObjectId(followerId), followers: ObjectId(followingId), status: true }
+                { _id: ObjectId(followerId), followings: ObjectId(followingId), status: true }
             ).then((follower) => {
                 if (follower) {
                     resolve({ status: true });
