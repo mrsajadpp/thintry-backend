@@ -434,9 +434,9 @@ app.post('/user/follow', async (req, res, next) => {
         let response = await userData.addFollow(req.body.follower_id, req.body.following_id);
         console.log(response)
         if (response.status) {
-            res.json({ status: true, followingBack: true });
+            res.json({ status: true });
         } else {
-            res.json({ status: false, followingBack: false });
+            res.json({ status: false });
         }
     } catch (error) {
         console.error(error);
