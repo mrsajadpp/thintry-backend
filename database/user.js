@@ -796,9 +796,10 @@ module.exports = {
                 timestamp : new Date()
             }
 
-            let replies = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) }).replies;
+            let tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
+            console.log(tag)
 
-            await db.get().collection(COLLECTIONS.POSTS).updateOne({ replies: parseInt(replies) + 1 })
+            await db.get().collection(COLLECTIONS.POSTS).updateOne({ replies: parseInt(tag.replies) + 1 })
 
             setTimeout(async () => {
                 let tagData = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
