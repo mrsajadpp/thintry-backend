@@ -796,11 +796,18 @@ module.exports = {
                 timestamp: new Date()
             }
 
-            let tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
-            await tag.replies.push(ObjectId(user_id));
-            console.log(...tag.replies)
+            const tag = await db.collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
 
-            await db.get().collection(COLLECTIONS.POSTS).updateOne({ _id: ObjectId(tag_id) }, { replies: [...tag.replies] })
+            // Add the new ObjectId to the "replies" array
+            tag.replies.push(ObjectId(user_id));
+
+            // Update the document with the new "replies" array
+            await db.collection(COLLECTIONS.POSTS).updateOne(
+                { _id: ObjectId(tag_id) },
+                { $set: { replies: tag.replies } }
+            );
+
+            console.log(...tag.replies);
 
             setTimeout(async () => {
                 let tagData = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
