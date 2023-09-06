@@ -547,15 +547,13 @@ module.exports = {
     },
     delTagReply: async ({ uid, tagId, main_tag_id }) => {
         try {
-            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(main_tag_id) });
-
             // Remove the ObjectId from the "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(main_tag_id) },
                 { $pull: { replies: ObjectId(tagId) } }
             );
 
-            let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user: ObjectId(uid) });
+            let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user_id: ObjectId(uid) });
             if (res) {
                 return { status: true };
             } else {
