@@ -291,7 +291,9 @@ app.get('/tag/delete', async (req, res, next) => {
 
 app.get('/tag/reply/delete', async (req, res, next) => {
     try {
+        console.log(req.query)
         let response = await userData.delTagReply(req.query);
+        console.log(response)
         if (response.status) {
             res.json({ status: true });
         } else {
