@@ -950,48 +950,51 @@ module.exports = {
             return { status: false, error };
         }
     },
-    findFollowers: (username) => {
-        db.get().collection(COLLECTIONS.USERS).aggregate([
-            {
-                $match: { username: username.toLowerCase().toString() }
-            },
-            {
-                $lookup: {
-                    from: COLLECTIONS.USERS,
-                    localField: 'followers',
-                    foreignField: '_id',
-                    as: 'followerDetails'
-                }
-            },
-            {
-                $project: {
-                    followerDetails: {
-                        _id: 1,
-                        username: 1,
-                        firstname: 1,
-                        lastname: 1,
-                        profile: 1,
-                        verified: 1,
-                        official: 1
-                        // Add other fields you need to display
+    findFollowers: async (username) => {
+        try {
+            let followers = await db.get().collection(COLLECTIONS.USERS).aggregate([
+                {
+                    $match: { username: username.toLowerCase().toString() }
+                },
+                {
+                    $lookup: {
+                        from: COLLECTIONS.USERS,
+                        localField: 'followers',
+                        foreignField: '_id',
+                        as: 'followerDetails'
+                    }
+                },
+                {
+                    $project: {
+                        followerDetails: {
+                            _id: 1,
+                            username: 1,
+                            firstname: 1,
+                            lastname: 1,
+                            profile: 1,
+                            verified: 1,
+                            official: 1
+                            // Add other fields you need to display
+                        }
+                    }
+                },
+                {
+                    $unwind: '$followerDetails'
+                },
+                {
+                    $sort: {
+                        'followerDetails.username': 1 // Sort by username in ascending order
                     }
                 }
-            },
-            {
-                $unwind: '$followerDetails'
-            },
-            {
-                $sort: {
-                    'followerDetails.username': 1 // Sort by username in ascending order
-                }
+            ]).toArray()
+            if (followers) {
+                return { status: true, followers };
+            } else {
+                return { status: false };
             }
-        ]).toArray()
-            .then((result) => {
-                return { status: true, followers: result }
-            })
-            .catch((error) => {
-                return { status: false }
-            });
+        } catch (error) {
+            return { status: false, error };
+        }
     },
     findFollowings: (username) => {
         db.get().collection(COLLECTIONS.USERS).aggregate([
