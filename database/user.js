@@ -898,23 +898,6 @@ module.exports = {
             });
         });
     },
-    isFollowingBack: (followerId, followingId) => {
-        return new Promise((resolve, reject) => {
-            // Check if the followed user is also following back
-            db.get().collection(COLLECTIONS.USERS).findOne(
-                { _id: ObjectId(followingId), followings: ObjectId(followerId), status: true }
-            ).then((followingBack) => {
-                if (followingBack) {
-                    resolve({ status: true });
-                } else {
-                    resolve({ status: false });
-                }
-            }).catch((error) => {
-                console.error("Error checking if following back:", error);
-                reject({ status: false, error });
-            });
-        });
-    },
     delFollow: async (followerId, followingId) => {
         try {
             const followerUser = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(followerId) });
@@ -931,9 +914,8 @@ module.exports = {
                 content: `Dear ${followingUser.firstname},<br><br>We're reaching out to let you know that ${followerUser.username} has unfollowed you. If you have any questions or concerns, feel free to reach out to us.<br><br>Best regards,<br>Thintry`
             });
 
-            followerUser.followings.forEach(async element => {
+            const promises = followerUser.followings.map(async (element) => {
                 const isFollowing = element.toString() === followingId.toString();
-                // // Check if the follower is already following the following user
                 if (isFollowing) {
                     // Update the follower's followings array and the following user's followers array
                     const updatedFollower = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
@@ -953,8 +935,19 @@ module.exports = {
                     return { message: 'Not following', status: true };
                 }
             });
+
+            const results = await Promise.all(promises);
+
+            // Check the results to determine the final status
+            for (const result of results) {
+                if (result.status === false) {
+                    return result; // Return the first unsuccessful result
+                }
+            }
+
+            return { message: 'Unfollowed successfully', status: true };
         } catch (error) {
-            return { status: false, error }
+            return { status: false, error };
         }
     },
     findFollowers: (username) => {
