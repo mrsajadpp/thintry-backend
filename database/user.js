@@ -794,6 +794,18 @@ module.exports = {
                 timestamp : new Date()
             }
 
+            setTimeout(async () => {
+                let tagData = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
+                let user = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: tagData.user });
+                let client = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(user_id) });
+                sendMail({
+                    email: user.email,
+                    subject: "New reply!",
+                    text: `Hello ${user.firstname}, ${client.username} replied your tag`,
+                    content: `New reply to your <a href='https://web.thintry.com/tag/${tag_id}'>tag</a> : ${filter.clean(reply)}\n\n - <a href="http://api.thintry.com/user/${client.username}">${client.firstname} ${client.lastname}</a>`
+                });
+            }, 1000);
+
             await db.get().collection(COLLECTIONS.REPLIES).insertOne(replyData);
             return { status: true }
         } catch (error) {
