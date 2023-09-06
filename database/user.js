@@ -887,9 +887,9 @@ module.exports = {
             { _id: ObjectId(followerId), followings: ObjectId(followingId), status: true }
         ).then((follower) => {
             if (follower) {
-                return { status: true }
+                return { status: true };
             } else {
-                return { status: false }
+                return { status: false };
             }
         }).catch((error) => {
             console.error("Error checking if following:", error);
