@@ -547,10 +547,15 @@ module.exports = {
     },
     delTagReply: async ({ uid, tagId, main_tag_id }) => {
         try {
-            // Remove the ObjectId from the "replies" array
+            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(main_tag_id) });
+
+            // Add the new ObjectId to the "replies" array
+            tag.replies = tag.replies.filter(e => e !== ObjectId(tagId));
+
+            // Update the document with the new "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
-                { _id: ObjectId(main_tag_id) },
-                { $pull: { replies: ObjectId(tagId) } }
+                { _id: ObjectId(tag_id) },
+                { $set: { replies: tag.replies } }
             );
 
             let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user_id: ObjectId(uid) });
@@ -815,10 +820,15 @@ module.exports = {
                 timestamp: new Date()
             }
 
+            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
+
+            // Add the new ObjectId to the "replies" array
+            tag.replies.push(ObjectId(tag_id));
+
             // Update the document with the new "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(tag_id) },
-                { $set: { replies: ObjectId(tag_id) } }
+                { $set: { replies: tag.replies } }
             );
 
             setTimeout(async () => {
