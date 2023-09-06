@@ -796,7 +796,7 @@ module.exports = {
                 timestamp: new Date()
             }
 
-            const tag = await db.collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
+            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
 
             // Add the new ObjectId to the "replies" array
             tag.replies.push(ObjectId(user_id));
