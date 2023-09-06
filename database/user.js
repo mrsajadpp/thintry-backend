@@ -452,6 +452,7 @@ module.exports = {
                         upvote: 1,
                         downvote: 1,
                         replies: 1,
+                        audio: 1
                     }
                 }
             ]).toArray();
@@ -725,6 +726,7 @@ module.exports = {
                         upvote: 1,
                         downvote: 1,
                         replies: 1,
+                        audio: 1
                     }
                 }
             ];
