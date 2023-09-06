@@ -883,32 +883,36 @@ module.exports = {
         }
     },
     ifFollowing: (followerId, followingId) => {
-        db.get().collection(COLLECTIONS.USERS).findOne(
-            { _id: ObjectId(followerId), followings: ObjectId(followingId), status: true }
-        ).then((follower) => {
-            if (follower) {
-                return { status: true };
-            } else {
-                return { status: false };
-            }
-        }).catch((error) => {
-            console.error("Error checking if following:", error);
-            return { status: false, error }
+        return new Promise((resolve, reject) => {
+            db.get().collection(COLLECTIONS.USERS).findOne(
+                { _id: ObjectId(followerId), followings: ObjectId(followingId), status: true }
+            ).then((follower) => {
+                if (follower) {
+                    resolve({ status: true });
+                } else {
+                    resolve({ status: false });
+                }
+            }).catch((error) => {
+                console.error("Error checking if following:", error);
+                reject({ status: false, error });
+            });
         });
     },
     isFollowingBack: (followerId, followingId) => {
-        // Check if the followed user is also following back
-        db.get().collection(COLLECTIONS.USERS).findOne(
-            { _id: ObjectId(followingId), followings: ObjectId(followerId), status: true }
-        ).then((followingBack) => {
-            if (followingBack) {
-                return { status: true }
-            } else {
-                return { status: false }
-            }
-        }).catch((error) => {
-            console.error("Error checking if following back:", error);
-            return { status: false, error }
+        return new Promise((resolve, reject) => {
+            // Check if the followed user is also following back
+            db.get().collection(COLLECTIONS.USERS).findOne(
+                { _id: ObjectId(followingId), followings: ObjectId(followerId), status: true }
+            ).then((followingBack) => {
+                if (followingBack) {
+                    resolve({ status: true });
+                } else {
+                    resolve({ status: false });
+                }
+            }).catch((error) => {
+                console.error("Error checking if following back:", error);
+                reject({ status: false, error });
+            });
         });
     },
     delFollow: async (followerId, followingId) => {

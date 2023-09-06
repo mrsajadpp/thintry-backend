@@ -417,7 +417,7 @@ app.post('/user/followings', async (req, res, next) => {
 app.post('/user/isfollowing', async (req, res, next) => {
     try {
         let response = await userData.ifFollowing(req.body.follower_id, req.body.following_id);
-        console.log(response)
+        console.log(response);
         if (response.status) {
             res.json({ status: true, following: true });
         } else {
@@ -427,7 +427,7 @@ app.post('/user/isfollowing', async (req, res, next) => {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while fetching is following!' });
     }
-})
+});
 
 app.post('/user/isfollowingback', async (req, res, next) => {
     try {
@@ -441,7 +441,7 @@ app.post('/user/isfollowingback', async (req, res, next) => {
         console.error(error);
         res.status(500).json({ status: false, message: 'An error occurred while fetching is following back!' });
     }
-})
+});
 
 app.get('*', (req, res, next) => {
     res.json({ status: false, message: 'Api not found!' })
