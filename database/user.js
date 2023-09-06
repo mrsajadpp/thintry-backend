@@ -814,7 +814,9 @@ module.exports = {
                 post_id: ObjectId(tag_id),
                 user_id: ObjectId(user_id),
                 content: filter.clean(reply),
-                timestamp: new Date()
+                timestamp: new Date(),
+                upvote: [],
+                downvote: []
             }
 
             setTimeout(async () => {
