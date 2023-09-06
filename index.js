@@ -243,7 +243,6 @@ app.post('/tag/new', async (req, res, next) => {
 
 app.post('/tag/reply/new', async (req, res, next) => {
     try {
-        console.log(req.body)
         const sanitizedContent = await sanitizeHtml(req.query.reply, {
             allowedTags: ['b'], // Remove all HTML tags
             allowedAttributes: {} // No attributes allowed
@@ -291,9 +290,7 @@ app.get('/tag/delete', async (req, res, next) => {
 
 app.get('/tag/reply/delete', async (req, res, next) => {
     try {
-        console.log(req.query)
         let response = await userData.delTagReply(req.query);
-        console.log(response)
         if (response.status) {
             res.json({ status: true });
         } else {
