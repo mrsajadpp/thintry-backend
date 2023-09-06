@@ -443,6 +443,23 @@ app.post('/user/follow', async (req, res, next) => {
         res.status(500).json({ status: false, message: 'An error occurred while fetching is following back!' });
     }
 });
+// /user/unfollow
+
+app.post('/user/unfollow', async (req, res, next) => {
+    try {
+        console.log(req.body)
+        let response = await userData.delFollow(req.body.follower_id, req.body.following_id);
+        console.log(response)
+        if (response.status) {
+            res.json({ status: true });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while fetching is following back!' });
+    }
+});
 
 app.get('*', (req, res, next) => {
     res.json({ status: false, message: 'Api not found!' })
