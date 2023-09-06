@@ -550,7 +550,7 @@ module.exports = {
             const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(main_tag_id) });
 
             // Add the new ObjectId to the "replies" array
-            tag.replies = tag.replies.filter(e => e !== ObjectId(tagId));
+            tag.replies = await tag.replies.filter(e => e !== ObjectId(tagId));
 
             // Update the document with the new "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
