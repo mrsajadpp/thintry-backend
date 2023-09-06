@@ -417,6 +417,7 @@ app.post('/user/followings', async (req, res, next) => {
 app.post('/user/isfollowing', async (req, res, next) => {
     try {
         let response = await userData.ifFollowing(req.body.follower_id, req.body.following_id);
+        console.log(response)
         if (response.status) {
             res.json({ status: true, following: true });
         } else {
