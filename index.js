@@ -386,6 +386,34 @@ app.get('/fetch/tag/replies', async (req, res, next) => {
     }
 });
 
+app.post('/user/followers', async (req, res, next) => {
+    try {
+        let response = await userData.findFollowers(req.body.username);
+        if (response.status) {
+            res.json({ status: true, followers: response.followers });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while fetching followers!' });
+    }
+})
+
+app.post('/user/followings', async (req, res, next) => {
+    try {
+        let response = await userData.findFollowings(req.body.username);
+        if (response.status) {
+            res.json({ status: true, followings: response.followings });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while fetching followings!' });
+    }
+})
+
 app.get('*', (req, res, next) => {
     res.json({ status: false, message: 'Api not found!' })
 });

@@ -842,5 +842,201 @@ module.exports = {
             console.error('Error in findTag replies:', error);
             throw { status: false, message: 'An error occurred while finding the tag replies', tag: null };
         }
+    },
+    addFollow: async (followerId, followingId) => {
+        try {
+            const followerUser = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(followerId) });
+            const followingUser = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(followingId) });
+
+            if (!followerUser || !followingUser) {
+                return { message: 'Invalid follower or following user', status: false };
+            }
+
+            sendMail({
+                email: followingUser.email,
+                subject: "New Follower Notification",
+                text: `Hello ${followingUser.firstname},<br><br>We're excited to let you know that ${followerUser.username} is now following you.`,
+                content: `Dear ${followingUser.firstname},<br><br>You have a new follower! ${followerUser.username} is now following your updates. You can check out their profile <a href='https://thintry.com/user/${followerUser.username}'>here</a>.<br><br>Best regards,<br>Thintry`
+            });
+
+            // Check if the follower is already following the following user
+            if (followerUser.followings.includes(ObjectId(followingId)) && followingUser.followers.includes(ObjectId(followerId))) {
+                return { message: 'Already following', status: true };
+            }
+
+            // Update the follower's followings array and the following user's followers array
+            const updatedFollower = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
+                { _id: ObjectId(followerId) },
+                { $push: { followings: ObjectId(followingId) } },
+                { returnOriginal: false }
+            );
+
+            const updatedFollowingUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
+                { _id: ObjectId(followingId) },
+                { $push: { followers: ObjectId(followerId) } },
+                { returnOriginal: false }
+            );
+
+            return { message: 'Followed successfully', status: true };
+        } catch (error) {
+            return { status: false, error }
+        }
+    },
+    ifFollowing: (followerId, followingId) => {
+        db.get().collection(COLLECTIONS.USERS).findOne(
+            { _id: ObjectId(followerId), followings: ObjectId(followingId), status: true }
+        ).then((follower) => {
+            if (follower) {
+                return { status: true }
+            } else {
+                return { status: false }
+            }
+        }).catch((error) => {
+            console.error("Error checking if following:", error);
+            return { status: false, error }
+        });
+    },
+    isFollowingBack: (followerId, followingId) => {
+        // Check if the followed user is also following back
+        db.get().collection(COLLECTIONS.USERS).findOne(
+            { _id: ObjectId(followingId), followings: ObjectId(followerId), status: true }
+        ).then((followingBack) => {
+            if (followingBack) {
+                return { status: true }
+            } else {
+                return { status: false }
+            }
+        }).catch((error) => {
+            console.error("Error checking if following back:", error);
+            return { status: false, error }
+        });
+    },
+    delFollow: async (followerId, followingId) => {
+        try {
+            const followerUser = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(followerId) });
+            const followingUser = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(followingId) });
+
+            if (!followerUser || !followingUser) {
+                return { message: 'Invalid follower or following user', status: false };
+            }
+
+            sendMail({
+                email: followingUser.email,
+                subject: "Update on Follower Status",
+                text: `Hello ${followingUser.firstname},<br><br>We wanted to inform you about a recent change in your follower list.`,
+                content: `Dear ${followingUser.firstname},<br><br>We're reaching out to let you know that ${followerUser.username} has unfollowed you. If you have any questions or concerns, feel free to reach out to us.<br><br>Best regards,<br>Thintry`
+            });
+
+            followerUser.followings.forEach(async element => {
+                const isFollowing = element.toString() === followingId.toString();
+                // // Check if the follower is already following the following user
+                if (isFollowing) {
+                    // Update the follower's followings array and the following user's followers array
+                    const updatedFollower = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
+                        { _id: ObjectId(followerId) },
+                        { $pull: { followings: ObjectId(followingId) } },
+                        { returnOriginal: false }
+                    );
+
+                    const updatedFollowingUser = await db.get().collection(COLLECTIONS.USERS).findOneAndUpdate(
+                        { _id: ObjectId(followingId) },
+                        { $pull: { followers: ObjectId(followerId) } },
+                        { returnOriginal: false }
+                    );
+
+                    return { message: 'Unfollowed successfully', status: true };
+                } else {
+                    return { message: 'Not following', status: true };
+                }
+            });
+        } catch (error) {
+            return { status: false, error }
+        }
+    },
+    findFollowers: (username) => {
+        db.get().collection(COLLECTIONS.USERS).aggregate([
+            {
+                $match: { username: username.toLowerCase().toString() }
+            },
+            {
+                $lookup: {
+                    from: COLLECTIONS.USERS,
+                    localField: 'followers',
+                    foreignField: '_id',
+                    as: 'followerDetails'
+                }
+            },
+            {
+                $project: {
+                    followerDetails: {
+                        _id: 1,
+                        username: 1,
+                        firstname: 1,
+                        lastname: 1,
+                        profile: 1,
+                        verified: 1,
+                        official: 1
+                        // Add other fields you need to display
+                    }
+                }
+            },
+            {
+                $unwind: '$followerDetails'
+            },
+            {
+                $sort: {
+                    'followerDetails.username': 1 // Sort by username in ascending order
+                }
+            }
+        ]).toArray()
+            .then((result) => {
+                return { status: true, followers: result }
+            })
+            .catch((error) => {
+                return { status: false }
+            });
+    },
+    findFollowings: (username) => {
+        db.get().collection(COLLECTIONS.USERS).aggregate([
+            {
+                $match: { username: username.toLowerCase().toString() }
+            },
+            {
+                $lookup: {
+                    from: COLLECTIONS.USERS,
+                    localField: 'followings',
+                    foreignField: '_id',
+                    as: 'followingDetails'
+                }
+            },
+            {
+                $project: {
+                    followingDetails: {
+                        _id: 1,
+                        username: 1,
+                        firstname: 1,
+                        lastname: 1,
+                        profile: 1,
+                        verified: 1,
+                        official: 1
+                        // Add other fields you need to display
+                    }
+                }
+            },
+            {
+                $unwind: '$followingDetails'
+            },
+            {
+                $sort: {
+                    'followingDetails.username': 1 // Sort by username in ascending order
+                }
+            }
+        ]).toArray()
+            .then((result) => {
+                return { status: true, followings: result }
+            })
+            .catch((error) => {
+                return { status: false }
+            });
     }
 };
