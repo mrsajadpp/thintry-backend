@@ -241,6 +241,26 @@ app.post('/tag/new', async (req, res, next) => {
     }
 });
 
+app.post('/tag/reply/new', async (req, res, next) => {
+    try {
+        console.log(req.body)
+        const sanitizedContent = await sanitizeHtml(req.query.reply, {
+            allowedTags: ['b'], // Remove all HTML tags
+            allowedAttributes: {} // No attributes allowed
+        });
+        req.query.reply = await sanitizedContent;
+        let tag = await userData.newTagReply(req.body);
+        if (tags.status) {
+            res.json({ status: true });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while new tag' });
+    }
+})
+
 app.get('/fetch/user/tags/all', async (req, res, next) => {
     try {
         let response = await userData.findAllTags();

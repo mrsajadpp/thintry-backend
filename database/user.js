@@ -784,5 +784,21 @@ module.exports = {
             console.error('Error in findTag replies:', error);
             throw { status: false, message: 'An error occurred while finding the tag replies', tag: null };
         }
+    },
+    newTagReply: async ({ reply, tag_id, user_id }) => {
+        try {
+            let replyData = await {
+                post_id: ObjectId(tag_id),
+                user: ObjectId(user_id),
+                content: filter.clean(reply),
+                timestamp : new Date()
+            }
+
+            await db.get().collection(COLLECTIONS.REPLIES).insertOne(replyData);
+            return { status: true }
+        } catch (error) {
+            console.error('Error in findTag replies:', error);
+            throw { status: false, message: 'An error occurred while finding the tag replies', tag: null };
+        }
     }
 };
