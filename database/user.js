@@ -550,13 +550,20 @@ module.exports = {
             const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(main_tag_id) });
 
             // Add the new ObjectId to the "replies" array
-            tag.replies = await tag.replies.filter(e => e !== ObjectId(tagId));
+            // Check if tag.replies is an array before using filter
+            if (Array.isArray(tag.replies)) {
+                tag.replies = tag.replies.filter(e => e !== ObjectId(tagId));
 
-            // Update the document with the new "replies" array
-            await db.get().collection(COLLECTIONS.POSTS).updateOne(
-                { _id: ObjectId(tag_id) },
-                { $set: { replies: tag.replies } }
-            );
+                // Update the document with the new "replies" array
+                await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                    { _id: ObjectId(tag_id) },
+                    { $set: { replies: tag.replies } }
+                );
+            } else {
+                // Handle the case where tag.replies is not an array
+                console.error('tag.replies is not an array');
+            }
+
 
             let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user_id: ObjectId(uid) });
             if (res) {
