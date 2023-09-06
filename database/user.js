@@ -557,7 +557,7 @@ module.exports = {
 
                 // Update the document with the new "replies" array
                 await db.get().collection(COLLECTIONS.POSTS).updateOne(
-                    { _id: ObjectId(tag_id) },
+                    { _id: ObjectId(main_tag_id) },
                     { $set: { replies: tag.replies } }
                 );
             } else {
