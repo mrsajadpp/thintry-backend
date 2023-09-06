@@ -802,7 +802,7 @@ module.exports = {
             tag.replies.push(ObjectId(user_id));
 
             // Update the document with the new "replies" array
-            await db.collection(COLLECTIONS.POSTS).updateOne(
+            await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(tag_id) },
                 { $set: { replies: tag.replies } }
             );
