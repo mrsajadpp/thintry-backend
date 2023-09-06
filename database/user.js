@@ -815,15 +815,10 @@ module.exports = {
                 timestamp: new Date()
             }
 
-            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
-
-            // Add the new ObjectId to the "replies" array
-            tag.replies.push(ObjectId(tag_id));
-
             // Update the document with the new "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(tag_id) },
-                { $set: { replies: tag.replies } }
+                { $set: { replies: ObjectId(tag_id) } }
             );
 
             setTimeout(async () => {
