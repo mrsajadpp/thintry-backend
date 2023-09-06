@@ -250,7 +250,7 @@ app.post('/tag/reply/new', async (req, res, next) => {
         });
         req.query.reply = await sanitizedContent;
         let tag = await userData.newTagReply(req.body);
-        if (tags.status) {
+        if (tag.status) {
             res.json({ status: true });
         } else {
             res.json({ status: false });
