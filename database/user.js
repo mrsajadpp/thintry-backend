@@ -545,6 +545,27 @@ module.exports = {
             throw { status: false, message: 'An error occurred while deleting tag' };
         }
     },
+    delTagReply: async ({ uid, tagId, main_tag_id }) => {
+        try {
+            const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(main_tag_id) });
+
+            // Remove the ObjectId from the "replies" array
+            await db.get().collection(COLLECTIONS.POSTS).updateOne(
+                { _id: ObjectId(main_tag_id) },
+                { $pull: { replies: ObjectId(tag_id) } }
+            );
+
+            let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user: ObjectId(uid) });
+            if (res) {
+                return { status: true };
+            } else {
+                return { status: false };
+            }
+        } catch (error) {
+            console.log(error)
+            throw { status: false, message: 'An error occurred while deleting tag' };
+        }
+    },
     upVote: async ({ tagId, uid }) => {
         try {
             // Find the tag by ID and check if it exists
@@ -799,15 +820,13 @@ module.exports = {
             const tag = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });
 
             // Add the new ObjectId to the "replies" array
-            tag.replies.push(ObjectId(user_id));
+            tag.replies.push(ObjectId(tag_id));
 
             // Update the document with the new "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(tag_id) },
                 { $set: { replies: tag.replies } }
             );
-
-            console.log(...tag.replies);
 
             setTimeout(async () => {
                 let tagData = await db.get().collection(COLLECTIONS.POSTS).findOne({ _id: ObjectId(tag_id) });

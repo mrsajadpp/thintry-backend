@@ -289,6 +289,20 @@ app.get('/tag/delete', async (req, res, next) => {
     }
 });
 
+app.get('/tag/reply/delete', async (req, res, next) => {
+    try {
+        let response = await userData.delTagReply(req.query);
+        if (response.status) {
+            res.json({ status: true });
+        } else {
+            res.json({ status: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: 'An error occurred while deleting tag' });
+    }
+})
+
 app.post('/tag/upvote', async (req, res, next) => {
     try {
         let response = await userData.upVote(req.body);
