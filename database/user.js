@@ -552,7 +552,7 @@ module.exports = {
             // Remove the ObjectId from the "replies" array
             await db.get().collection(COLLECTIONS.POSTS).updateOne(
                 { _id: ObjectId(main_tag_id) },
-                { $pull: { replies: ObjectId(tag_id) } }
+                { $pull: { replies: ObjectId(tagId) } }
             );
 
             let res = await db.get().collection(COLLECTIONS.REPLIES).deleteOne({ _id: ObjectId(tagId), user: ObjectId(uid) });
