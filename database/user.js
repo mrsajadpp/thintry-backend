@@ -551,6 +551,7 @@ module.exports = {
 
             // Add the new ObjectId to the "replies" array
             // Check if tag.replies is an array before using filter
+            console.log(tag.replies)
             if (Array.isArray(tag.replies)) {
                 tag.replies = tag.replies.filter(e => e !== ObjectId(tagId));
 
