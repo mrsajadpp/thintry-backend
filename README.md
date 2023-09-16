@@ -76,4 +76,4 @@ If you would like to contribute to this project, please follow these guidelines:
 
 ## License
 
-This project is licensed under the ISC License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html). See the [LICENSE](LICENSE) file for details.
