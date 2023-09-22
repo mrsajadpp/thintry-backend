@@ -848,11 +848,6 @@ module.exports = {
                     }
                 },
                 {
-                    $sort: {
-                        timestamp: 1
-                    }
-                },
-                {
                     $lookup: {
                         from: "users",
                         localField: "user_id",
@@ -871,7 +866,7 @@ module.exports = {
                     }
                 }
             ];
-
+    
             const replies = await db.get().collection(COLLECTIONS.REPLIES).aggregate(aggregationPipeline).toArray();
             if (replies) {
                 return { status: true, replies };
