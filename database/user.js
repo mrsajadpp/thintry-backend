@@ -641,6 +641,80 @@ module.exports = {
             throw { status: false, message: 'An error occurred while upvoting the tag', tags: null };
         }
     },
+    upVoteReply: async ({ replyId, uid }) => {
+        try {
+            // Find the tag by ID and check if it exists
+            const reply = await db.get().collection(COLLECTIONS.REPLIES).findOne({ _id: ObjectId(replyId) });
+            if (!reply) {
+                return { status: false, message: 'Tag not found', replies: null };
+            }
+
+            // Check if the user has already upvoted this tag
+            const hasDownvoted = reply.downvote.includes(uid);
+
+            if (hasDownvoted) {
+                // Remove the user's UID from the upvote array and add it to the downvote array
+                await db.get().collection(COLLECTIONS.REPLIES).updateOne(
+                    { _id: ObjectId(replyId) },
+                    { $pull: { downvote: uid }, $push: { upvote: uid } }
+                );
+            } else {
+
+                // Check if the user has already upvoted this tag
+                const hasUpvoted = reply.upvote.includes(uid);
+
+                if (!hasUpvoted) {
+                    // Add the user's UID to the upvote array
+                    await db.get().collection(COLLECTIONS.REPLIES).updateOne(
+                        { _id: ObjectId(replyId) },
+                        { $push: { upvote: uid } }
+                    );
+
+                    // Retrieve the updated tag after upvoting
+                    await db.get().collection(COLLECTIONS.REPLIES).findOne({ _id: ObjectId(replyId) });
+                } else {
+                    // Remove the user's UID from the upvote array
+                    await db.get().collection(COLLECTIONS.REPLIES).updateOne(
+                        { _id: ObjectId(replyId) },
+                        { $pull: { upvote: uid } }
+                    );
+
+                    // Retrieve the updated tag after removing the upvote
+                    await db.get().collection(COLLECTIONS.REPLIES).findOne({ _id: ObjectId(replyId) });
+                }
+            }
+            const tags = await db.get().collection(COLLECTIONS.REPLIES).aggregate([
+                {
+                    $sort: {
+                        timestamp: -1
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                {
+                    $project: {
+                        user: { $arrayElemAt: ["$user", 0] },
+                        content: 1,
+                        timestamp: 1,
+                        upvote: 1,
+                        downvote: 1,
+                        replies: 1,
+                    }
+                }
+            ]).toArray();
+
+            return { status: true, tags };
+        } catch (error) {
+            console.error('Error in upvoteTag:', error);
+            throw { status: false, message: 'An error occurred while upvoting the tag', tags: null };
+        }
+    },
     downVote: async ({ tagId, uid }) => {
         try {
             try {

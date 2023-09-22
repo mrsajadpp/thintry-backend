@@ -334,7 +334,7 @@ app.post('/tag/upvote', async (req, res, next) => {
 
 app.post('/tag/reply/upvote', async (req, res, next) => {
     try {
-        let response = await userData.upVote(req.body);
+        let response = await userData.upVoteReply(req.body);
         if (response.status) {
             res.json({ status: true, tags: response.tags });
         } else {
