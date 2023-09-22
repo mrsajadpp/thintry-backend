@@ -848,6 +848,11 @@ module.exports = {
                     }
                 },
                 {
+                    $sort: {
+                        timestamp: 1
+                    }
+                },
+                {
                     $lookup: {
                         from: "users",
                         localField: "user_id",
