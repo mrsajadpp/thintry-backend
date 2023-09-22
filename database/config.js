@@ -19,7 +19,7 @@ function get() {
     return state.db;
 }
 connect((err) => {
-    if (err) {
+    if (err) { 
         console.log('Database connection error : ' + err);
     } else {
         console.log('Database connected!');

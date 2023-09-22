@@ -309,7 +309,8 @@ module.exports = {
     },
     verifyUser: async (data) => {
         try {
-            const user = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data.uid) });
+            console.log(data)
+            const user = await db.get().collection(COLLECTIONS.USERS).findOne({ _id: ObjectId(data.userId) });
 
             if (!user) {
                 return { status: false, message: 'User not found' };
@@ -319,7 +320,7 @@ module.exports = {
 
             if (isCodeValid) {
                 const result = await db.get().collection(COLLECTIONS.USERS).updateOne(
-                    { _id: ObjectId(data.uid) },
+                    { _id: ObjectId(data.userId) },
                     { $set: { status: true, verification_code: null, encrypted_verification_code: null } }
                 );
 

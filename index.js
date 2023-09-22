@@ -25,7 +25,15 @@ app.use(compression());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(fileUpload());
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+    credentials: true
+}));
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    next();
+});
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     next();
@@ -117,6 +125,9 @@ app.get('/auth/login', async (req, res, next) => {
         let response = await userData.login(req.query);
         if (response.status) {
             response.user.password = null;
+            req.session = {
+                user: response.user
+            }
             res.json({ status: true, user: response.user });
         } else {
             res.json({ status: false });
@@ -128,10 +139,15 @@ app.get('/auth/login', async (req, res, next) => {
 
 app.get('/auth/verify/check', async (req, res, next) => {
     try {
+        console.log(req.query);
         let response = await userData.verifyUser(req.query);
+        console.log(response)
 
         if (response.status) {
             response.user.password = null;
+            req.session = {
+                user: response.user
+            }
             res.json({ status: true, user: response.user });
         } else {
             res.json({ status: false });
